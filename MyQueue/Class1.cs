@@ -14,6 +14,8 @@ namespace MyQueue
             public T item;
             public Node next;
             }
+        private object tailLock=new object();
+        private object headLock=new object();
 
         private Node first;
         private Node last;
@@ -23,24 +25,29 @@ namespace MyQueue
 
         public void Enqueue(T item)
             {
-            Node oldlast = last;
-            last = new Node();
-            last.item = item;
-            last.next = null;
-            if (first == null) first = last;
-            else        oldlast.next = last;
-            ++count;
+            lock (tailLock)
+                {
+                Node oldlast = last;
+                last = new Node();
+                last.item = item;
+                last.next = null;
+                if (first == null) first = last;
+                else oldlast.next = last;
+                ++count;
+                }
+
             }
         public T Dequeue()
             {
-            try
-            {
-            T item = first.item;
-            first = first.next;
-            if (first == null) last = null;
-            --count;
-            return item;
-              }
+            lock(headLock)
+            try 
+                {
+                T item = first.item;
+                first = first.next;
+                if (first == null) last = null;
+                --count;
+                return item;
+                }
             catch (NullReferenceException exc)
                 {
                 throw new InvalidOperationException("Queue is empty", exc);

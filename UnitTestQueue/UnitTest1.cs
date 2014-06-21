@@ -46,17 +46,21 @@ namespace UnitTestQueue
         public void asyncTest()
             {
             MyQueue.MyQueue<int> queue = new MyQueue.MyQueue<int>();
-            for (int k=0; k < 10; ++k)
+            //попробовать много раз
+            for (int k=0; k < 100; ++k)
                 {
+                //запустить задачи по заполнению очереди...
                 System.Threading.Tasks.TaskFactory TF = new System.Threading.Tasks.TaskFactory();
                 TF.StartNew(() => enqueueAlot(300, queue));
                 TF.StartNew(() => enqueueAlot(300, queue));
-                while (queue.Count < 300) System.Threading.Thread.Sleep(1);
-
+                //подождать, когда заполнится на треть
+                while (queue.Count < 200) System.Threading.Thread.Sleep(1);
+                //запустить задачи по извлечению. Собрать одну последовательность.
                 List<int> result = new List<int>();
                 List<System.Threading.Tasks.Task<List<int>>> tasks = new List<System.Threading.Tasks.Task<List<int>>>();
                 for (int i = 0; i < 3; ++i) tasks.Add(TF.StartNew(() => dequeueAlot(200, queue)));
                 foreach (var task in tasks) result.AddRange(task.Result);
+                //проверить последовательность.
                 result.Sort();
                 int index = 0;
                 for (int i = 0; i < 300; ++i)
